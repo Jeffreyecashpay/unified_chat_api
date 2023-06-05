@@ -65,7 +65,7 @@ const BookController = {
 			}
 			const data = {
 				...user.dataValues,
-				hasPin: user.pin ? true : false,
+				hasPin: (user.pin != null && user.pin != "") ? true : false,
 				token
 			};
 			delete data.account_status;
@@ -92,6 +92,7 @@ const BookController = {
 			const data = {
 				...user.dataValues,
 				...userinfo.dataValues,
+				hasPin: (user.pin != null && user.pin != "") ? true : false,
 			};
 			
 			delete data.user_id;

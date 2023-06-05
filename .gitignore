@@ -7,8 +7,6 @@
 node_modules/
 dist/
 radata/
-.env
-
 src/server/*.tmp
 # Compiled Java class files
 *.class
