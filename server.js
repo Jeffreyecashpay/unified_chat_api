@@ -3,10 +3,10 @@ const express = require("express");
 const formData = require("express-form-data");
 const bodyParser = require("body-parser");
 const cors = require("cors");
-const Routes = require("./../routes/").routers(); 
-const ErrorHandler = require("../middleware/error-handler"); 
-const AuthJWT = require("../middleware/auth_jwt"); 
-const db = require("../use-cases/model");
+const Routes = require("./src/routes").routers(); 
+const ErrorHandler = require("./src/middleware/error-handler"); 
+const AuthJWT = require("./src/middleware/auth_jwt"); 
+const db = require("./src/use-cases/model");
 // const logger = require("debug")("v2server:");
 const Gun = require('gun');
 const WebSocket = require('ws');
@@ -36,7 +36,7 @@ app.use(express.json({
 
 let server
 try {
-	server = app.listen(8085, "0.0.0.0", () => {
+	server = app.listen(8086, "0.0.0.0", () => {
 		
 	});
 } catch (error) {
