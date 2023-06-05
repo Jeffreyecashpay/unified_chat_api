@@ -1,0 +1,17 @@
+{
+  "dependencies": {
+    "bcryptjs": "^2.4.3",
+    "body-parser": "^1.20.1",
+    "cors": "^2.8.5",
+    "dotenv": "^16.0.1",
+    "express": "^4.18.2",
+    "express-form-data": "^2.0.19",
+    "express-validator": "^7.0.1",
+    "gun": "^0.2020.1239",
+    "jsonwebtoken": "^9.0.0",
+    "mysql2": "^2.3.3",
+    "nodemon": "^2.0.20",
+    "sequelize": "^6.25.3",
+    "ws": "^8.13.0"
+  }
+}
