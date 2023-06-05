@@ -36,7 +36,7 @@ app.use(express.json({
 
 let server
 try {
-	server = app.listen(8086, "0.0.0.0", () => {
+	server = app.listen(8085, "0.0.0.0", () => {
 		
 	});
 } catch (error) {
