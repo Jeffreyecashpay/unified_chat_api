@@ -26,6 +26,40 @@ const roomClientsMap = {};
 
 app.use(express.static('public'));
 
+const ConnectedClients = [];
+app.ws("/chat/queue", async (ws, req) => {
+  // if (!roomClientsMap[roomId]) {
+  //   roomClientsMap[roomId] = [];
+  // }
+  // ws.roomId = roomId;
+  ws.on("connection", () => {
+    console.log("connected");
+  });
+  console.log(req.query);
+
+  if (ConnectedClients.indexOf(ws) < 0) {
+    ConnectedClients.push(ws);
+  }
+
+  ws.on("message", async (message) => {
+    ConnectedClients.forEach((client) => {
+      console.log(message);
+      //console.log(client);
+      console.log(message);
+
+      if (client.readyState === WebSocket.OPEN) {
+        client.send(JSON.stringify({ text: message }));
+      }
+    });
+  });
+  ws.on("close", () => {
+    const index = ConnectedClients.indexOf(ws);
+    if (index !== -1) {
+      ConnectedClients.splice(index, 1);
+    }
+  });
+});
+
 app.ws('/api/chat/:roomId/:userId', async (ws, req) => {
   const { roomId, userId } = req.params;
 
