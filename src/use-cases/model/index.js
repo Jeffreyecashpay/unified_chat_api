@@ -8,10 +8,8 @@ const seq = new Sequelize(
   {
     port: process.env.PORT,
     host: process.env.DB_HOST,
-    dialect: 'mysql',
-    dialectOptions: {
-      connectTimeout: 60000, // 60 seconds
-    },
+    dialect: 'mysql'
+   
   }
 );
 
@@ -22,10 +20,8 @@ const seq2 = new Sequelize(
   {
     port: process.env.PORT,
     host: process.env.DB_HOST,
-    dialect: 'mysql',
-    dialectOptions: {
-      connectTimeout: 60000, // 60 seconds
-    },
+    dialect: 'mysql'
+   
   }
 );
 
