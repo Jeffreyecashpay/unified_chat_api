@@ -6,8 +6,7 @@ const seq = new Sequelize(
   process.env.DB_USERNAME,
   process.env.DB_PASSWORD,
   {
-    port: process.env.PORT,
-    host: process.env.DB_HOST,
+    host: `${process.env.DB_HOST}`,
     dialect: 'mysql'
    
   }
@@ -18,8 +17,8 @@ const seq2 = new Sequelize(
   process.env.DB_USERNAME,
   process.env.DB_PASSWORD,
   {
-    port: process.env.PORT,
-    host: process.env.DB_HOST,
+
+    host: `${process.env.DB_HOST}`,
     dialect: 'mysql'
    
   }
