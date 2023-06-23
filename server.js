@@ -1,4 +1,5 @@
 require("dotenv").config();
+const md5 = require("md5");
 const express = require("express");
 const formData = require("express-form-data");
 const bodyParser = require("body-parser");
@@ -67,28 +68,40 @@ app.ws('/api/chat/:roomId/:userId', async (ws, req) => {
     ws.close();
     return;
   }
+  try {
+    const hashedid = md5(userId);
+    if (!roomClientsMap[hashedid]) {
+      if(!roomClientsMap[hashedid]) {
+        const userinfo = await db.models.userInfoModel.findOne({ where: { user_id: userId } });
 
-  if (!roomClientsMap[roomId]) {
-    roomClientsMap[roomId] = [];
-  }
+        if(!userinfo) return;
 
-  const roomClients = roomClientsMap[roomId];
-  roomClients.push(ws);
-
-  ws.on('message', async (message) => {
-    roomClients.forEach(client => {
-      if (client.readyState === WebSocket.OPEN) {
-        client.send(JSON.stringify({ text: message, sender: userId }));
+        db.models.csrchatroomsModel.create({ user_id: userId, customer_id: userId, room_code: hashedid, chat_name: `${userinfo?.first_name} ${userinfo?.middlename} ${userinfo?.last_name}` });
+        roomClientsMap[hashedid] = [];
+      }
+    }
+  
+    const roomClients = roomClientsMap[hashedid];
+    roomClients.push(ws);
+  
+    ws.on('message', async (message) => {
+      roomClients.forEach(client => {
+        if (client.readyState === WebSocket.OPEN) {
+          client.send(JSON.stringify({ text: message, sender: userId }));
+        }
+      });
+    });
+  
+    ws.on('close', () => {
+      const index = roomClients.indexOf(ws);
+      if (index !== -1) {
+        roomClients.splice(index, 1);
       }
     });
-  });
-
-  ws.on('close', () => {
-    const index = roomClients.indexOf(ws);
-    if (index !== -1) {
-      roomClients.splice(index, 1);
-    }
-  });
+    
+  } catch (error) {
+    console.log(error);
+  }
 });
 
 app.get('/', (req, res) => {
@@ -112,6 +125,7 @@ app.use(express.json({
   
 (async () => {
 	await db.sequelize.sync();
+	await db.sequelize2.sync();
 })();
 
 

@@ -3,6 +3,7 @@ const db = require("../use-cases/model");
 const bcryptjs = require('bcryptjs');
 const { Op } = require('sequelize');
 const jwt = require('jsonwebtoken');
+const md5 = require("md5");
 const BookController = {
 
 	register: async (req) => {
@@ -18,10 +19,13 @@ const BookController = {
 
 			const usercreated = await db.models.userModel.create({ email, password:hashedpassword });
 			const userinfocreated = await db.models.userInfoModel.create({ user_id: usercreated.user_id, first_name, middle_name, last_name, birth_date, mobile_number, address });
-			
+			const hashedid = md5(usercreated.user_id);
+			const roomcreated = await db.models.csrchatroomsModel.create({ user_id: usercreated.user_id, customer_id: usercreated.user_id, room_code: hashedid, chat_name: `${usercreated?.first_name} ${usercreated?.middlename} ${usercreated?.last_name}` });
+        
 			const data = {
 				...usercreated.dataValues,
-				...userinfocreated.dataValues
+				...userinfocreated.dataValues,
+				room_code: hashedid,
 			};
 			delete data.password;
 			delete data.pin;
