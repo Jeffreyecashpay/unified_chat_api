@@ -23,11 +23,35 @@ module.exports = (seq, dataType, sequelize) => {
 			allowNull: false,
 			field: "room_code",
 		},
+		status_code: {
+			type: dataType.STRING,
+			allowNull: true,
+			field: "status_code",
+			field: "1",
+		},
+		status_desc: {
+			type: dataType.STRING,
+			allowNull: true,
+			defaultValue: "WAITING",
+			field: "status_desc",
+		},
 		chat_name: {
 			type: dataType.STRING,
 			allowNull: false,
 			field: "chat_name",
 		},
+		current_queue_id: {
+			type: dataType.STRING,
+			allowNull: true,
+			defaultValue: "WAITING",
+			field: "current_queue_id",
+		},
+		last_message: {
+			type: dataType.STRING,
+			allowNull: true,
+			field: "last_message",
+		},
+		
 		createdAt: {
 			type: dataType.DATE,
 			defaultValue: sequelize.literal('CURRENT_TIMESTAMP'),

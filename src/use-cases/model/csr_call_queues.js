@@ -29,6 +29,11 @@ module.exports = (seq, dataType, sequelize) => {
 			allowNull: true,
 			field: "date_onqueue",
 		},
+		date_end: {
+			type: dataType.STRING,
+			allowNull: true,
+			field: "date_end",
+		},
 		date_ongoing: {
 			type: dataType.STRING,
 			allowNull: true,

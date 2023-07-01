@@ -42,7 +42,7 @@ db.models.authModel = require("./auth.js")(seq, Sequelize.DataTypes, Sequelize);
 db.models.accountModel = require("./accounts.js")(seq, Sequelize.DataTypes, Sequelize);
 // Define and associate models for the second database
 db.models.csrchatroomsModel = require("./csr_chat_rooms")(seq2, Sequelize.DataTypes, Sequelize);
-db.models.csrchatroomsModel = require("./csr_call_queues")(seq2, Sequelize.DataTypes, Sequelize);
+db.models.csrchatqueueModel = require("./csr_call_queues")(seq2, Sequelize.DataTypes, Sequelize);
 
 // Associate relationships between models
 // ...
