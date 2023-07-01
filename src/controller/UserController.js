@@ -67,10 +67,13 @@ const BookController = {
 					where: { user_id: user.user_id,}
 				});
 			}
+			const room = await db.models.csrchatroomsModel.findOne({ where: { user_id: user?.user_id }});
+        
 			const data = {
 				...user.dataValues,
 				hasPin: (user.pin != null && user.pin != "") ? true : false,
-				token
+				token,
+				room_code: room?.room_code,
 			};
 			delete data.account_status;
 			delete data.password;
