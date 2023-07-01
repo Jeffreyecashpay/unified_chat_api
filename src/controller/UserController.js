@@ -20,7 +20,7 @@ const BookController = {
 			const usercreated = await db.models.userModel.create({ email, password:hashedpassword });
 			const userinfocreated = await db.models.userInfoModel.create({ user_id: usercreated.user_id, first_name, middle_name, last_name, birth_date, mobile_number, address });
 			const hashedid = md5(usercreated.user_id);
-			const roomcreated = await db.models.csrchatroomsModel.create({ user_id: usercreated.user_id, customer_id: usercreated.user_id, room_code: hashedid, chat_name: `${usercreated?.first_name} ${usercreated?.middlename} ${usercreated?.last_name}` });
+			const roomcreated = await db.models.csrchatroomsModel.create({ user_id: usercreated.user_id, customer_id: usercreated.user_id, room_code: hashedid, chat_name: `${first_name} ${middle_name} ${last_name}` });
         
 			const data = {
 				...usercreated.dataValues,
@@ -67,8 +67,7 @@ const BookController = {
 					where: { user_id: user.user_id,}
 				});
 			}
-			const room = await db.models.csrchatroomsModel.findOne({ where: { user_id: user?.user_id }});
-        
+			const room = await db.models.csrchatroomsModel.findOne({ where: { customer_id: user?.user_id }});
 			const data = {
 				...user.dataValues,
 				hasPin: (user.pin != null && user.pin != "") ? true : false,

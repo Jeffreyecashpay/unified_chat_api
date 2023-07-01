@@ -27,7 +27,6 @@ module.exports = (seq, dataType, sequelize) => {
 			type: dataType.STRING,
 			allowNull: true,
 			field: "status_code",
-			field: "1",
 		},
 		status_desc: {
 			type: dataType.STRING,
