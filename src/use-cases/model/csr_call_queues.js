@@ -15,7 +15,7 @@ module.exports = (seq, dataType, sequelize) => {
 		},
 		csr_id: {
 			type: dataType.INTEGER,
-			allowNull: false,
+			allowNull: true,
 			field: "csr_id",
 		},
 		queue_status: {

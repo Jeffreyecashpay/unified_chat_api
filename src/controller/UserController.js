@@ -8,6 +8,7 @@ const BookController = {
 
 	register: async (req) => {
 		try {
+			console.log(req.body);
 			const {email, password, first_name, middle_name, last_name, birth_date, mobile_number, address} = req.body;
 			const saltRounds = 10;
 			const salt = await bcryptjs.genSalt(saltRounds);

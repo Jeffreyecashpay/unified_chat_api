@@ -33,10 +33,16 @@ app.ws("/chat/queue", async (ws, req) => {
   //   roomClientsMap[roomId] = [];
   // }
   // ws.roomId = roomId;
+  console.log(req.query);
   ws.on("connection", () => {
     console.log("connected");
   });
-  console.log(req.query);
+  const { caller_id, id } = req.query;
+  const { status_code } = await db.models.csrchatroomsModel.findOne({ where: { room_code: id } });
+  if( status_code == "1" ) {
+    await db.models.csrchatroomsModel.update({ status_code: "2" },{ where: { room_code: id } });
+    await db.models.csrchatqueueModel.create({ caller_id, transaction: "CHAT"});
+  }
 
   if (ConnectedClients.indexOf(ws) < 0) {
     ConnectedClients.push(ws);
@@ -63,7 +69,6 @@ app.ws("/chat/queue", async (ws, req) => {
 
 app.ws('/api/chat/:roomId/:userId', async (ws, req) => {
   const { roomId, userId } = req.params;
-
   if (!roomId || !userId) {
     ws.close();
     return;
@@ -71,13 +76,14 @@ app.ws('/api/chat/:roomId/:userId', async (ws, req) => {
   try {
     const hashedid = md5(userId);
     if (!roomClientsMap[hashedid]) {
-      if(!roomClientsMap[hashedid]) {
-        const userinfo = await db.models.userInfoModel.findOne({ where: { user_id: userId } });
-
-        if(!userinfo) return;
+      roomClientsMap[hashedid] = [];
+      const chatinfo = await db.models.csrchatroomsModel.findOne({ where: { room_code: hashedid } });
+  
+      if(!chatinfo) return;
+      if(!chatinfo) {
 
         db.models.csrchatroomsModel.create({ user_id: userId, customer_id: userId, room_code: hashedid, chat_name: `${userinfo?.first_name} ${userinfo?.middlename} ${userinfo?.last_name}` });
-        roomClientsMap[hashedid] = [];
+        
       }
     }
   
