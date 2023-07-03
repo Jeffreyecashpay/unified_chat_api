@@ -33,26 +33,26 @@ app.ws("/chat/queue", async (ws, req) => {
   //   roomClientsMap[roomId] = [];
   // }
   // ws.roomId = roomId;
-  console.log(req.query);
+  console.log(req?.query);
+  console.log(req?.query?.id);
   ws.on("connection", () => {
     console.log("connected");
   });
-  const { caller_id, id } = req.query;
-  const { status_code } = await db.models.csrchatroomsModel.findOne({ where: { room_code: id } });
-  if( status_code == "1" ) {
-    await db.models.csrchatroomsModel.update({ status_code: "2" },{ where: { room_code: id } });
-    await db.models.csrchatqueueModel.create({ caller_id, transaction: "CHAT"});
-  }
 
   if (ConnectedClients.indexOf(ws) < 0) {
     ConnectedClients.push(ws);
   }
 
   ws.on("message", async (message) => {
+    const { caller_id, id } = JSON.parse(message);
+    const { status_code } = await db.models.csrchatroomsModel.findOne({ where: { room_code: id } });
+    if( status_code == "1" ) {
+      await db.models.csrchatroomsModel.update({ status_code: "2" },{ where: { room_code: id } });
+      await db.models.csrchatqueueModel.create({ caller_id, transaction: "CHAT"});
+    }
     ConnectedClients.forEach((client) => {
-      console.log(message);
-      //console.log(client);
-      console.log(message);
+      // console.log(client);
+      console.log("message", message);
 
       if (client.readyState === WebSocket.OPEN) {
         client.send(JSON.stringify({ text: message }));
