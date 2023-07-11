@@ -7,8 +7,7 @@ const seq = new Sequelize(
   process.env.DB_PASSWORD,
   {
     host: `${process.env.DB_HOST}`,
-    dialect: 'mysql'
-   
+    dialect: "mysql",
   }
 );
 
@@ -17,10 +16,8 @@ const seq2 = new Sequelize(
   process.env.DB_USERNAME,
   process.env.DB_PASSWORD,
   {
-
     host: `${process.env.DB_HOST}`,
-    dialect: 'mysql'
-   
+    dialect: "mysql",
   }
 );
 
@@ -30,42 +27,73 @@ db.sequelize2 = seq2;
 db.models = {};
 
 // Define and associate models for the first database
-db.models.userModel = require("./users.js")(seq, Sequelize.DataTypes, Sequelize);
-db.models.userInfoModel = require("./users_info.js")(seq, Sequelize.DataTypes, Sequelize);
-db.models.kycInfoModel = require("./kyc_info.js")(seq, Sequelize.DataTypes, Sequelize);
+db.models.userModel = require("./users.js")(
+  seq,
+  Sequelize.DataTypes,
+  Sequelize
+);
+db.models.userInfoModel = require("./users_info.js")(
+  seq,
+  Sequelize.DataTypes,
+  Sequelize
+);
+db.models.kycInfoModel = require("./kyc_info.js")(
+  seq,
+  Sequelize.DataTypes,
+  Sequelize
+);
 db.models.authModel = require("./auth.js")(seq, Sequelize.DataTypes, Sequelize);
-db.models.accountModel = require("./accounts.js")(seq, Sequelize.DataTypes, Sequelize);
+db.models.accountModel = require("./accounts.js")(
+  seq,
+  Sequelize.DataTypes,
+  Sequelize
+);
 // Define and associate models for the second database
-db.models.csrchatroomsModel = require("./csr_chat_rooms")(seq2, Sequelize.DataTypes, Sequelize);
-db.models.csrchatqueueModel = require("./csr_call_queues")(seq2, Sequelize.DataTypes, Sequelize);
+db.models.csrchatroomsModel = require("./csr_chat_rooms")(
+  seq2,
+  Sequelize.DataTypes,
+  Sequelize
+);
+db.models.csrchatqueueModel = require("./csr_call_queues")(
+  seq2,
+  Sequelize.DataTypes,
+  Sequelize
+);
+db.models.csrchatmessagesModel = require("./csr_chat_messages")(
+  seq2,
+  Sequelize.DataTypes,
+  Sequelize
+)
 
 // Associate relationships between models
 // ...
 
-
 db.models.userModel.hasOne(db.models.userInfoModel, {
-	foreignKey: {
-		name: "user_id"
-	}
+  foreignKey: {
+    name: "user_id",
+  },
 });
 
 db.models.userModel.hasOne(db.models.kycInfoModel, {
-	foreignKey: {
-		name: "user_id"
-	}
+  foreignKey: {
+    name: "user_id",
+  },
 });
 
 db.models.userModel.hasOne(db.models.authModel, {
-	foreignKey: {
-		name: "user_id"
-	}
+  foreignKey: {
+    name: "user_id",
+  },
 });
 
 db.models.userModel.hasOne(db.models.accountModel, {
-	foreignKey: {
-		name: "user_id"
-	}
+  foreignKey: {
+    name: "user_id",
+  },
 });
+
+
+
 // Synchronize models with the respective databases
 // async function syncModels() {
 //   try {

@@ -4,20 +4,21 @@ const express = require("express");
 const formData = require("express-form-data");
 const bodyParser = require("body-parser");
 const cors = require("cors");
-const Routes = require("./src/routes").routers(); 
-const ErrorHandler = require("./src/middleware/error-handler"); 
-const AuthJWT = require("./src/middleware/auth_jwt"); 
+const Routes = require("./src/routes").routers();
+const ErrorHandler = require("./src/middleware/error-handler");
+const AuthJWT = require("./src/middleware/auth_jwt");
 const db = require("./src/use-cases/model");
-const expressWs = require('express-ws');
-const { WebPubSubServiceClient } = require('@azure/web-pubsub');
-const Gun = require('gun');
-const WebSocket = require('ws');
-const port = process.env.PORT || 8086
+const expressWs = require("express-ws");
+const { WebPubSubServiceClient } = require("@azure/web-pubsub");
+const Gun = require("gun");
+const WebSocket = require("ws");
+const port = process.env.PORT || 8086;
 const app = express();
 expressWs(app);
 // Azure Web PubSub connection string
-const connectionString = 'Endpoint=https://unifiedwebsocket.webpubsub.azure.com;AccessKey=YvED3y9idvJddw8GlMCySPCMpYgNuo67gI6Z83HEUyY=;Version=1.0;';
-const hubName = 'web3chat';
+const connectionString =
+  "Endpoint=https://unifiedwebsocket.webpubsub.azure.com;AccessKey=YvED3y9idvJddw8GlMCySPCMpYgNuo67gI6Z83HEUyY=;Version=1.0;";
+const hubName = "web3chat";
 
 // Create a Web PubSub client
 const client = new WebPubSubServiceClient(connectionString, hubName);
@@ -25,9 +26,9 @@ const client = new WebPubSubServiceClient(connectionString, hubName);
 // Mapping of room IDs to WebSocket clients
 const roomClientsMap = {};
 
-app.use(express.static('public'));
+app.use(express.static("public"));
 
-const ConnectedClients = [];
+const queClients = [];
 app.ws("/chat/queue", async (ws, req) => {
   // if (!roomClientsMap[roomId]) {
   //   roomClientsMap[roomId] = [];
@@ -39,35 +40,43 @@ app.ws("/chat/queue", async (ws, req) => {
     console.log("connected");
   });
 
-  if (ConnectedClients.indexOf(ws) < 0) {
-    ConnectedClients.push(ws);
+  if (queClients.indexOf(ws) < 0) {
+    queClients.push(ws);
   }
 
+  console.log('QUEUE CLIENTS', queClients.length)
   ws.on("message", async (message) => {
-    const { caller_id, id } = JSON.parse(message);
-    const { status_code } = await db.models.csrchatroomsModel.findOne({ where: { room_code: id } });
-    if( status_code == "1" ) {
-      await db.models.csrchatroomsModel.update({ status_code: "2" },{ where: { room_code: id } });
-      await db.models.csrchatqueueModel.create({ caller_id, transaction: "CHAT"});
-    }
-    ConnectedClients.forEach((client) => {
+    const { caller_id, room_id } = JSON.parse(message);
+    const { status_code } = await db.models.csrchatroomsModel.findOne({
+      where: { id: room_id },
+    });
+    // if (status_code == "3") {
+    //   await db.models.csrchatqueueModel.create({
+    //     caller_id,
+    //     transaction: "CHAT",
+    //   });
+    //   await db.models.csrchatroomsModel.update(
+    //     { status_code: "2" },
+    //     { where: { id: id } }
+    //   );
+    // }
+    queClients.forEach((client) => {
       // console.log(client);
       console.log("message", message);
-
       if (client.readyState === WebSocket.OPEN) {
         client.send(JSON.stringify({ text: message }));
       }
     });
   });
   ws.on("close", () => {
-    const index = ConnectedClients.indexOf(ws);
+    const index = queClients.indexOf(ws);
     if (index !== -1) {
-      ConnectedClients.splice(index, 1);
+      queClients.splice(index, 1);
     }
   });
 });
 
-app.ws('/api/chat/:roomId/:userId', async (ws, req) => {
+app.ws("/api/chat/:roomId/:userId", async (ws, req) => {
   const { roomId, userId } = req.params;
   if (!roomId || !userId) {
     ws.close();
@@ -77,73 +86,187 @@ app.ws('/api/chat/:roomId/:userId', async (ws, req) => {
     const hashedid = md5(userId);
     if (!roomClientsMap[hashedid]) {
       roomClientsMap[hashedid] = [];
-      const chatinfo = await db.models.csrchatroomsModel.findOne({ where: { room_code: hashedid } });
-  
-      if(!chatinfo) return;
-      if(!chatinfo) {
-
-        db.models.csrchatroomsModel.create({ user_id: userId, customer_id: userId, room_code: hashedid, chat_name: `${userinfo?.first_name} ${userinfo?.middlename} ${userinfo?.last_name}` });
-        
-      }
+      // const chatinfo = await db.models.csrchatroomsModel.findOne({
+      //   where: { room_code: hashedid },
+      // });
     }
-  
+    //if(!chatinfo) return;
+    // if(!chatinfo) {
+
+    //   db.models.csrchatroomsModel.create({ customer_id: userId, room_code: hashedid, chat_name: `${userinfo?.first_name} ${userinfo?.middlename} ${userinfo?.last_name}` });
+
+    // }
+
+    //  console.log('CHAT INFO', chatinfo)
+
     const roomClients = roomClientsMap[hashedid];
     roomClients.push(ws);
-  
-    ws.on('message', async (message) => {
-      roomClients.forEach(client => {
+    console.log('CLIENTS', roomClients.length)
+ 
+    ws.on("message", async (message) => {
+      const chatinfo = await db.models.csrchatroomsModel
+        .findOne({ where: { room_code: hashedid } })
+        .catch((err) => {
+          console.log(err);
+        });
+
+      const msgDetails = JSON.parse(message);
+      msgDetails.room_code = hashedid;
+      
+      
+      const getQueueNo = async (queue_id) => {
+        const waitingQueues = await db.models.csrchatqueueModel.findAll({
+          where: { queue_status: "WAITING" },
+          order: [["id", "ASC"]],
+        });
+        const queueNo = waitingQueues.findIndex((que) => {
+          return que.id === queue_id;
+        });
+       // console.log('Queue No', queueNo)
+        return (queueNo + 1);
+      };
+
+      // console.log("status code", chatinfo?.status_code);
+      if (chatinfo?.status_code == "3" || chatinfo?.status_code === null) {
+        const newQueue = await db.models.csrchatqueueModel
+          .create({
+            caller_id: userId,
+            transaction: "CHAT",
+          })
+          .catch((error) => {
+            console.log(error);
+          });
+        //  console.log('NEW QUEUE', newQueue);
+
+        await db.models.csrchatroomsModel.update(
+          {
+            status_code: "1",
+            status_desc: "WAITING",
+            current_queue_id: newQueue.id,
+          },
+          { where: { id: roomId } }
+        );
+
+        // console.log('NEW QUEUE', newQueue);
+        //   console.log('WAITING QUEUE', waitingQueues.length);
+        const queueNo = await getQueueNo(newQueue.id);
+       
+        const [results, metadata] = await db.sequelize2
+          .query(
+            `SELECT q.id, 
+                    ui.last_name as lastname, 
+                    ui.first_name as firstname,
+                    q.queue_status,
+                    q.date_onqueue,
+                    q.date_ongoing,
+                    q.date_end,
+                    csr.firstname as csr_firstname,
+                    csr.lastname as csr_lastname,
+                    q.transaction,
+                    q.caller_id
+             FROM call_queues q 
+             INNER JOIN web3.users u on (u.user_id = q.caller_id)
+             INNER JOIN web3.users_info ui ON (u.user_id = ui.user_id)
+             LEFT JOIN csr_db.users csr on (csr.id = q.csr_id)
+             WHERE q.id=${newQueue.id}`
+          )
+          .catch((err) => {
+            console.log(err);
+          });
+
+        const sendQueue = results[0];
+        sendQueue.room_id = roomId;
+        sendQueue.chat_name = chatinfo?.chat_name;
+        msgDetails.queue_no = queueNo;
+
+        queClients.forEach((queClient) => {
+          if (queClient.readyState === WebSocket.OPEN) {
+            queClient.send(
+              JSON.stringify({
+                text: JSON.stringify(sendQueue),
+              })
+            );
+          }
+        });
+      }
+
+      if (chatinfo?.status_code == "1") {
+        const queueNo = await getQueueNo(chatinfo?.current_queue_id);
+        msgDetails.queue_no = queueNo;
+      }
+
+      /*SAVE MESSAGE TO DB*/
+      const chatMessage = await db.models.csrchatmessagesModel.create({
+        chat_room_id: roomId,
+        message_from: msgDetails.message_from,
+        queue_id: chatinfo?.current_queue_id,
+        sender_id: msgDetails.sender_id,
+        receiver_id: chatinfo.user_id,
+        message: msgDetails.message,
+      }).catch((error) => {
+        console.log(error);
+      });
+
+      roomClients.forEach((client) => {
         if (client.readyState === WebSocket.OPEN) {
-          client.send(JSON.stringify({ text: message, sender: userId }));
+          client.send(
+            JSON.stringify({
+              text: JSON.stringify(msgDetails),
+              sender: msgDetails.sender,
+            })
+          );
         }
       });
     });
-  
-    ws.on('close', () => {
+
+    ws.on("close", () => {
       const index = roomClients.indexOf(ws);
       if (index !== -1) {
         roomClients.splice(index, 1);
       }
     });
-    
   } catch (error) {
     console.log(error);
   }
 });
 
-app.get('/', (req, res) => {
-  res.sendFile(__dirname + '/index.html');
+app.get("/", (req, res) => {
+  res.sendFile(__dirname + "/index.html");
 });
+
+
 app.use(formData.parse());
 app.use(bodyParser.urlencoded({ extended: true }));
 app.use(bodyParser.json());
 app.use(cors({ origin: "*" }));
 // app.use(AuthJWT);
 app.use(ErrorHandler);
-app.use(express.json({
-	verify : (req, res, buf ) => {
-		try {
-			JSON.parse(buf);
-		} catch (e) {
-			res.status(404).send("Not allowed json format");
-		}
-	}
-}));
-  
+app.use(
+  express.json({
+    verify: (req, res, buf) => {
+      try {
+        JSON.parse(buf);
+      } catch (e) {
+        res.status(404).send("Not allowed json format");
+      }
+    },
+  })
+);
+
 (async () => {
-	await db.sequelize.sync();
-	await db.sequelize2.sync();
+  await db.sequelize.sync();
+  await db.sequelize2.sync();
 })();
 
-
-let server
+let server;
 try {
-	server = app.listen(port, "0.0.0.0", () => {
-		console.log(`Listening on port ${port}`);
-	});
+  server = app.listen(port, "0.0.0.0", () => {
+    console.log(`Listening on port ${port}`);
+  });
 } catch (error) {
-	console.log("ERROR ON LISTENING: ", error);
+  console.log("ERROR ON LISTENING: ", error);
 }
 // add route
-Routes.map(route => { 
-	app.use(route.url, route.pathName);
+Routes.map((route) => {
+  app.use(route.url, route.pathName);
 });
