@@ -6,6 +6,7 @@
     "cors": "^2.8.5",
     "dotenv": "^16.3.1",
     "express": "^4.18.2",
+    "express-fileupload": "^1.4.0",
     "express-form-data": "^2.0.22",
     "express-validator": "^7.0.1",
     "express-ws": "^5.0.2",

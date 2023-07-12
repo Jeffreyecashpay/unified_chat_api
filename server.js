@@ -12,9 +12,43 @@ const expressWs = require("express-ws");
 const { WebPubSubServiceClient } = require("@azure/web-pubsub");
 const Gun = require("gun");
 const WebSocket = require("ws");
+const fileUpload = require("express-fileupload");
+
+
 const port = process.env.PORT || 8086;
 const app = express();
+app.use(cors({ origin: "*" }));
+app.use(bodyParser.urlencoded({ extended: true }));
+app.use(bodyParser.json());
+app.use(fileUpload())
+
+app.use(formData.parse());
+// app.use(AuthJWT);
+//app.use(ErrorHandler);
+app.use(
+  express.json({
+    verify: (req, res, buf) => {
+      try {
+        JSON.parse(buf);
+      } catch (e) {
+        res.status(404).send("Not allowed json format");
+      }
+    },
+  })
+);
+
+app.get("/", async (req, res) => {
+  //res.sendFile(__dirname + "/index.html");
+  console.log(req)
+res.send({message: 'Welcome!!!!!!!!!!!!'})
+});
+
+app.use(ErrorHandler);
+
+
 expressWs(app);
+
+
 // Azure Web PubSub connection string
 const connectionString =
   "Endpoint=https://unifiedwebsocket.webpubsub.azure.com;AccessKey=YvED3y9idvJddw8GlMCySPCMpYgNuo67gI6Z83HEUyY=;Version=1.0;";
@@ -34,8 +68,8 @@ app.ws("/chat/queue", async (ws, req) => {
   //   roomClientsMap[roomId] = [];
   // }
   // ws.roomId = roomId;
-  console.log(req?.query);
-  console.log(req?.query?.id);
+ // console.log(req?.query);
+ // console.log(req?.query?.id);
   ws.on("connection", () => {
     console.log("connected");
   });
@@ -100,8 +134,10 @@ app.ws("/api/chat/:roomId/:userId", async (ws, req) => {
     //  console.log('CHAT INFO', chatinfo)
 
     const roomClients = roomClientsMap[hashedid];
+    console.log(roomClients.findIndex((www) => {return www === ws}) );
     roomClients.push(ws);
-    console.log('CLIENTS', roomClients.length)
+    
+    console.log('CHAT CLIENTS', roomClients.length)
  
     ws.on("message", async (message) => {
       const chatinfo = await db.models.csrchatroomsModel
@@ -188,6 +224,7 @@ app.ws("/api/chat/:roomId/:userId", async (ws, req) => {
             );
           }
         });
+        chatinfo.current_queue_id = sendQueue.id;
       }
 
       if (chatinfo?.status_code == "1") {
@@ -203,9 +240,17 @@ app.ws("/api/chat/:roomId/:userId", async (ws, req) => {
         sender_id: msgDetails.sender_id,
         receiver_id: chatinfo.user_id,
         message: msgDetails.message,
-      }).catch((error) => {
-        console.log(error);
+      }).
+      catch((error) => {
+       console.log(error);
       });
+      await db.models.csrchatroomsModel.update(
+        {
+          last_message: msgDetails.message
+        },
+        { where: { id: roomId } }
+      );
+
 
       roomClients.forEach((client) => {
         if (client.readyState === WebSocket.OPEN) {
@@ -230,28 +275,11 @@ app.ws("/api/chat/:roomId/:userId", async (ws, req) => {
   }
 });
 
-app.get("/", (req, res) => {
-  res.sendFile(__dirname + "/index.html");
-});
 
 
-app.use(formData.parse());
-app.use(bodyParser.urlencoded({ extended: true }));
-app.use(bodyParser.json());
-app.use(cors({ origin: "*" }));
-// app.use(AuthJWT);
-app.use(ErrorHandler);
-app.use(
-  express.json({
-    verify: (req, res, buf) => {
-      try {
-        JSON.parse(buf);
-      } catch (e) {
-        res.status(404).send("Not allowed json format");
-      }
-    },
-  })
-);
+
+
+
 
 (async () => {
   await db.sequelize.sync();
@@ -259,10 +287,16 @@ app.use(
 })();
 
 let server;
+
 try {
+  
   server = app.listen(port, "0.0.0.0", () => {
     console.log(`Listening on port ${port}`);
   });
+
+
+ 
+  
 } catch (error) {
   console.log("ERROR ON LISTENING: ", error);
 }
