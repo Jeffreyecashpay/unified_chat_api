@@ -73,7 +73,7 @@ const BookController = {
 				...user.dataValues,
 				hasPin: (user.pin != null && user.pin != "") ? true : false,
 				token,
-				room_code: room?.room_code,
+				room_code: room?.id,
 			};
 			delete data.account_status;
 			delete data.password;
