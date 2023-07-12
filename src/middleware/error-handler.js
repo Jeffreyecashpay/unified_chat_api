@@ -4,6 +4,7 @@ const ErrorHandler = ( Error, req, res, next ) => {
 		error: true,
 		message: Error || "Internal Server Error"
 	});
+	console.log(Error)
 	next();
 };
 

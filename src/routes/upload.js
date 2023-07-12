@@ -1,24 +1,15 @@
 const express = require("express");
-const md5 = require("md5");
-const formData = require("express-form-data");
-const bodyParser = require("body-parser");
-const fileUpload = require("express-fileupload");
+const fs = require("fs");
 
 const uploadRoute = express.Router();
 
-
-uploadRoute.post("/", (req, res, next) => {
-  
+uploadRoute.post("/", async (req, res, next) => {
+  console.log(req.files)
   let uploadFile = req.files.file;
   const name = uploadFile.name;
-  const md5_filename = md5(uploadFile);
+  const md5_filename = uploadFile.md5;
   const saveAs = `${md5_filename}_${name}`;
-
-  uploadFile.mv(`src/files/${saveAs}`, (err) => {
-       if(err) {
-        console.log(err)
-       }
-  });
+  await uploadFile.mv(`src/files/${saveAs}`);
 
 //  res.send({message: 'success'})
 });
