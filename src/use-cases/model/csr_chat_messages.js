@@ -1,5 +1,5 @@
 module.exports = (seq, dataType, sequelize) => {
-	const KycInfoModel = seq.define("chat_messages", {
+	const ChatMessagesModel = seq.define("chat_messages", {
 		id: {
 			type: dataType.INTEGER,
 			autoIncrement: true,
@@ -55,5 +55,5 @@ module.exports = (seq, dataType, sequelize) => {
 		freezeTableName: true
 	});
 
-	return KycInfoModel;
+	return ChatMessagesModel;
 };

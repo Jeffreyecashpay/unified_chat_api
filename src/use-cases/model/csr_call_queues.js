@@ -1,5 +1,5 @@
 module.exports = (seq, dataType, sequelize) => {
-	const KycInfoModel = seq.define("call_queues", {
+	const CallQueueModel = seq.define("call_queues", {
 		id: {
 			type: dataType.INTEGER,
 			autoIncrement: true,
@@ -67,5 +67,5 @@ module.exports = (seq, dataType, sequelize) => {
 		freezeTableName: true
 	});
 
-	return KycInfoModel;
+	return CallQueueModel;
 };

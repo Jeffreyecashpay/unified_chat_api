@@ -6,7 +6,6 @@ const bodyParser = require("body-parser");
 const cors = require("cors");
 const Routes = require("./src/routes").routers();
 const ErrorHandler = require("./src/middleware/error-handler");
-const AuthJWT = require("./src/middleware/auth_jwt");
 const db = require("./src/use-cases/model");
 const expressWs = require("express-ws");
 const { WebPubSubServiceClient } = require("@azure/web-pubsub");
@@ -22,7 +21,6 @@ app.use(bodyParser.json());
 app.use(fileUpload());
 
 app.use(formData.parse());
-// app.use(AuthJWT);
 //app.use(ErrorHandler);
 app.use(
   express.json({
