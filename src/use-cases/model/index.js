@@ -59,11 +59,11 @@ db.models.csrchatqueueModel = require("./csr_call_queues")(
   Sequelize.DataTypes,
   Sequelize
 );
-// db.models.csrchatmessagesModel = require("./csr_chat_messages")(
-//   seq2,
-//   Sequelize.DataTypes,
-//   Sequelize
-// )
+db.models.csrchatmessagesModel = require("./csr_chat_messages")(
+  seq2,
+  Sequelize.DataTypes,
+  Sequelize
+)
 
 // Associate relationships between models
 // ...
