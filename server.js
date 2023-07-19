@@ -74,6 +74,7 @@ const getQueueNo = async (userid, transaction) => {
 };
 
 app.ws("/chat/queue", async (ws, req) => {
+  try{
   // if (!roomClientsMap[roomId]) {
   //   roomClientsMap[roomId] = [];
   // }
@@ -127,6 +128,9 @@ app.ws("/chat/queue", async (ws, req) => {
       queClients.splice(index, 1);
     }
   });
+} catch (e) {
+  console.log("ASDASDASDASDADSADSSD", e);
+}
 });
 
 const queueNoClients = [];
