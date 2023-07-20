@@ -52,5 +52,5 @@ jobs:
         with:
           app-name: 'unifiedchatapi'
           slot-name: 'Production'
-          publish-profile: ${{ secrets.AZUREAPPSERVICE_PUBLISHPROFILE_B40FDA4FE9224FF7909A8D79F8B58571 }}
+          publish-profile: ${{ secrets.AZUREAPPSERVICE_PUBLISHPROFILE_23CB73DD3E7749BFAF252703E7CFBF26 }}
           package: .
