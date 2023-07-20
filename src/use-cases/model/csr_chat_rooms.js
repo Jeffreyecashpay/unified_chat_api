@@ -42,7 +42,7 @@ module.exports = (seq, dataType, sequelize) => {
 		current_queue_id: {
 			type: dataType.STRING,
 			allowNull: true,
-			defaultValue: "WAITING",
+			defaultValue: "0",
 			field: "current_queue_id",
 		},
 		last_message: {
