@@ -29,6 +29,18 @@ module.exports = (seq, dataType, sequelize) => {
 			field: "pin",
 			allowNull: true,
 		},
+		kyc1_status: {
+			type: dataType.BOOLEAN,
+			defaultValue: false,
+			field: "kyc1_status",
+			allowNull: false,
+		},
+		kyc2_status: {
+			type: dataType.BOOLEAN,
+			defaultValue: false,
+			field: "kyc2_status",
+			allowNull: false,
+		},
 		createdAt: {
 			type: dataType.DATE,
 			defaultValue: sequelize.literal('CURRENT_TIMESTAMP'),
