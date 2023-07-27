@@ -329,6 +329,8 @@ app.ws("/api/chat/:roomId/:userId", async (ws, req) => {
       if (chatinfo?.status_code == "3" || chatinfo?.status_code === null) {
         const newQueue = await db.models.csrchatqueueModel
           .create({
+            category_id : msgDetails.category_id,
+            sub_category_id : msgDetails.sub_category_id,
             caller_id: userId,
             transaction: "CHAT",
           })
@@ -353,6 +355,10 @@ app.ws("/api/chat/:roomId/:userId", async (ws, req) => {
         const [results, metadata] = await db.sequelize2
           .query(
             `SELECT q.id, 
+                    q.category_id,
+                    q.sub_category_id,
+                    main_cat.category as category,
+                    sub_cat.category as sub_category,
                     ui.last_name as lastname, 
                     ui.first_name as firstname,
                     q.queue_status,
@@ -367,6 +373,8 @@ app.ws("/api/chat/:roomId/:userId", async (ws, req) => {
              INNER JOIN web3.users u on (u.user_id = q.caller_id)
              INNER JOIN web3.users_info ui ON (u.user_id = ui.user_id)
              LEFT JOIN csr_db.users csr on (csr.id = q.csr_id)
+             LEFT JOIN categories main_cat on (main_cat.id = q.category_id)
+             LEFT JOIN sub_categories sub_cat on (q.sub_category_id = sub_cat.id) 
              WHERE q.id=${newQueue.id}`
           )
           .catch((err) => {
@@ -396,6 +404,8 @@ app.ws("/api/chat/:roomId/:userId", async (ws, req) => {
       }
 
       /*SAVE MESSAGE TO DB*/
+
+   
       const chatMessage = await db.models.csrchatmessagesModel
         .create({
           chat_room_id: roomId,
@@ -413,7 +423,9 @@ app.ws("/api/chat/:roomId/:userId", async (ws, req) => {
           last_message: msgDetails.message,
         },
         { where: { id: roomId } }
-      );
+      ).catch((error) => {
+        console.log(error);
+      });
 
       roomClients.forEach((client) => {
         if (client.readyState === WebSocket.OPEN) {

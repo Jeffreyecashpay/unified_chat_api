@@ -13,6 +13,17 @@ module.exports = (seq, dataType, sequelize) => {
 			allowNull: false,
 			field: "caller_id",
 		},
+		category_id : {
+			type: dataType.INTEGER,
+			allowNull: true,
+			field: "category_id" 	
+		},
+		sub_category_id : {
+			type: dataType.INTEGER,
+			allowNull: true,
+			field: "sub_category_id" 	
+		},
+		
 		csr_id: {
 			type: dataType.INTEGER,
 			allowNull: true,
