@@ -36,7 +36,8 @@ app.use(
 
 app.get("/", async (req, res) => {
   //res.sendFile(__dirname + "/index.html");
-  console.log(req);
+  console.log(req, 'WELCOME');
+
   res.send({ message: "Welcome!!!!!!!!!!!!" });
 });
 
