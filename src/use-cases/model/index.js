@@ -64,6 +64,17 @@ db.models.csrchatmessagesModel = require("./csr_chat_messages")(
   Sequelize.DataTypes,
   Sequelize
 )
+db.models.csrcategoryModel = require("./csr_category.js")(
+  seq2,
+  Sequelize.DataTypes,
+  Sequelize
+)
+db.models.csrsubcategoryModel = require("./csr_sub_category.js")(
+  seq2,
+  Sequelize.DataTypes,
+  Sequelize
+)
+
 
 // Associate relationships between models
 // ...
