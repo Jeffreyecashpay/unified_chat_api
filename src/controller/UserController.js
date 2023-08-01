@@ -48,7 +48,10 @@ const BookController = {
 			const user = await db.models.userModel.findOne({ where: { email }});
 			
 			if(!user) throw {code: 404, message: "User not found!"};
-
+			const deact = await db.models.deactivatedaccountsModel.findOne({ where: { user_id: user.user_id }});
+			if(deact) {
+				if(deact?.status)  throw {code: 400, message: deact?.reason};
+			}
 			if(!(await bcryptjs.compare(password, user.password))) throw {code: 404, message: "Incorrect Password!"}
 			const toenc = {
 				user_id: user.user_id,
@@ -141,6 +144,22 @@ const BookController = {
 			if(!user) throw {code: 404, message: "User not found!"};
 			if(pin != user.pin) throw {code: 401, message: "Invalid pin!"};
 			return "Successfully authenticated!";
+		} catch(error) {
+			throw { code: error.code ?? 404, message: error.message };
+		}
+	},
+	deleteaccount: async (req) => {
+		try {
+			const { user_id } = req.user;
+			const deact = await db.models.deactivatedaccountsModel.findOne({ where: { user_id }});
+			if(deact) {
+				if(deact?.status)  throw {code: 400, message: "This Account is already deleted!"};
+			}
+			await db.models.deactivatedaccountsModel.create({
+				user_id,
+				reason: "This account is deleted!",
+			})
+			return "Successfully deleted!";
 		} catch(error) {
 			throw { code: error.code ?? 404, message: error.message };
 		}

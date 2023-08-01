@@ -48,6 +48,11 @@ db.models.accountModel = require("./accounts.js")(
   Sequelize.DataTypes,
   Sequelize
 );
+db.models.deactivatedaccountsModel = require("./deactivated_accounts.js")(
+  seq,
+  Sequelize.DataTypes,
+  Sequelize
+);
 // Define and associate models for the second database
 db.models.csrchatroomsModel = require("./csr_chat_rooms")(
   seq2,
@@ -98,6 +103,11 @@ db.models.userModel.hasOne(db.models.authModel, {
 });
 
 db.models.userModel.hasOne(db.models.accountModel, {
+  foreignKey: {
+    name: "user_id",
+  },
+});
+db.models.userModel.hasOne(db.models.deactivatedaccountsModel, {
   foreignKey: {
     name: "user_id",
   },

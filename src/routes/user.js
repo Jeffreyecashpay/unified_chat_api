@@ -109,6 +109,17 @@ userRoute.route("/add_account")
 		}
     }
 );
+userRoute.route("/delete_user")
+	.post(AuthJWT, async (req, res) => {
+		try {
+			const result = await UserController.deleteaccount(req);
+			res.status(200).send({ code: 200, mesage: result });
+
+		} catch (error) { 
+			res.status(error.code ?? 400).send({message:error.message});
+		}
+    }
+);
 
 
 
