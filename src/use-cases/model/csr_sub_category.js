@@ -1,5 +1,5 @@
 module.exports = (seq, dataType, sequelize) => {
-	const KycInfoModel = seq.define("sub_categories", {
+	const SubCategoryModel = seq.define("sub_categories", {
 		id: {
 			type: dataType.INTEGER,
 			autoIncrement: true,
@@ -8,11 +8,14 @@ module.exports = (seq, dataType, sequelize) => {
 			primaryKey: true,
 			allowNull: false,
 		},
-        category_id : {
-            type: dataType.INTEGER,
-            allowNull: true,
-            field: "category_id"
-        },
+		category_id: {
+			type: dataType.INTEGER,
+			allowNull: false,
+			references: {
+			  model: 'categories',
+			  key: 'category_id'
+			}
+		},
 		category: {
 			type: dataType.STRING,
 			allowNull: true,
@@ -35,5 +38,5 @@ module.exports = (seq, dataType, sequelize) => {
 		freezeTableName: true
 	});
 
-	return KycInfoModel;
+	return SubCategoryModel;
 };

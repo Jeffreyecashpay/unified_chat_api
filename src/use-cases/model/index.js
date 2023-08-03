@@ -112,6 +112,19 @@ db.models.userModel.hasOne(db.models.deactivatedaccountsModel, {
     name: "user_id",
   },
 });
+// db.models.csrcategoryModel.hasMany(db.models.csrsubcategoryModel, {
+//   foreignKey: {
+//     name: "category_id",
+//   },
+// });
+db.models.csrcategoryModel.hasMany(db.models.csrsubcategoryModel, {
+	foreignKey : 'category_id',
+	as: 'subcategories'
+});
+db.models.csrsubcategoryModel.belongsTo(db.models.csrcategoryModel, {
+	foreignKey : 'category_id',
+	as: 'subcategories'
+});
 
 
 
