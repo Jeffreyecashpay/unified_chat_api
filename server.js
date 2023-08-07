@@ -111,8 +111,8 @@ app.ws("/chat/queue", async (ws, req) => {
         );
         await db.models.csrchatroomsModel.update(
           {
-            status_code: "3",
-            status_desc: "DONE",
+            status_code: "5",
+            status_desc: "CANCELLED",
           },
           { where: { id: msg.room_id } }
         );
