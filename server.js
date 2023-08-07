@@ -36,7 +36,7 @@ app.use(
 
 app.get("/", async (req, res) => {
   //res.sendFile(__dirname + "/index.html");
-  console.log(req, 'WELCOME');
+  console.log(req, "WELCOME");
 
   res.send({ message: "Welcome!!!!!!!!!!!!" });
 });
@@ -73,63 +73,80 @@ const getQueueNo = async (userid, transaction) => {
 };
 
 app.ws("/chat/queue", async (ws, req) => {
-  try{
-  // if (!roomClientsMap[roomId]) {
-  //   roomClientsMap[roomId] = [];
-  // }
-  // ws.roomId = roomId;
-  // console.log(req?.query);
-  // console.log(req?.query?.id);
-  ws.on("connection", () => {
-    console.log("connected");
-  });
-
-  if (queClients.indexOf(ws) < 0) {
-    queClients.push(ws);
-  }
-
-  console.log("QUEUE CLIENTS", queClients.length);
-  ws.on("message", async (message) => {
-    const { caller_id, room_id } = JSON.parse(message);
-    const { status_code } = await db.models.csrchatroomsModel.findOne({
-      where: { id: room_id },
-    });
-    // if (status_code == "3") {
-    //   await db.models.csrchatqueueModel.create({
-    //     caller_id,
-    //     transaction: "CHAT",
-    //   });
-    //   await db.models.csrchatroomsModel.update(
-    //     { status_code: "2" },
-    //     { where: { id: id } }
-    //   );
+  try {
+    // if (!roomClientsMap[roomId]) {
+    //   roomClientsMap[roomId] = [];
     // }
-    queClients.forEach((client) => {
-      // console.log(client);
-      console.log("message", message);
-      if (client.readyState === WebSocket.OPEN) {
-        client.send(JSON.stringify({ text: message }));
-      }
+    // ws.roomId = roomId;
+    // console.log(req?.query);
+    // console.log(req?.query?.id);
+    ws.on("connection", () => {
+      console.log("connected");
     });
-    queueNoClients.forEach(async (client) => {
-      // console.log(client);
-      const queueNo = await getQueueNo(client.user_id, client.transaction);
-      const room_code = md5(+client.user_id);
-      //      console.log("message", message);
-      if (client.readyState === WebSocket.OPEN) {
-        client.send(JSON.stringify({ queueNo, room_code }));
-      }
-    });
-  });
-  ws.on("close", () => {
-    const index = queClients.indexOf(ws);
-    if (index !== -1) {
-      queClients.splice(index, 1);
+
+    if (queClients.indexOf(ws) < 0) {
+      queClients.push(ws);
     }
-  });
-} catch (e) {
-  console.log("ASDASDASDASDADSADSSD", e);
-}
+
+    console.log("QUEUE CLIENTS", queClients.length);
+    ws.on("message", async (message) => {
+     const msg = JSON.parse(message);
+      // if (status_code == "3") {
+      //   await db.models.csrchatqueueModel.create({
+      //     caller_id,
+      //     transaction: "CHAT",
+      //   });
+      //   await db.models.csrchatroomsModel.update(
+      //     { status_code: "2" },
+      //     { where: { id: id } }
+      //   );
+      // }
+
+      if (msg.cancel) {
+        await db.models.csrchatqueueModel.update(
+          {
+            queue_status: "CANCELLED"
+          },
+          { where: { id: msg.id } }
+        );
+        await db.models.csrchatroomsModel.update(
+          {
+            status_code: "3",
+            status_desc: "DONE",
+          },
+          { where: { id: msg.room_id } }
+        );
+      }
+      queClients.forEach((client) => {
+        // console.log(client);
+        console.log("message", message);
+        if (client.readyState === WebSocket.OPEN) {
+          client.send(JSON.stringify({ text: message }));
+        }
+      });
+
+
+      queueNoClients.forEach(async (client) => {
+        // console.log(client);
+        const queueNo = await getQueueNo(client.user_id, client.transaction);
+        const room_code = md5(+client.user_id);
+        //      console.log("message", message);
+        if (client.readyState === WebSocket.OPEN) {
+          client.send(JSON.stringify({ queueNo, room_code }));
+        }
+      });
+
+      
+    });
+    ws.on("close", () => {
+      const index = queClients.indexOf(ws);
+      if (index !== -1) {
+        queClients.splice(index, 1);
+      }
+    });
+  } catch (e) {
+    console.log("ASDASDASDASDADSADSSD", e);
+  }
 });
 
 const queueNoClients = [];
@@ -180,8 +197,8 @@ app.ws("/api/video-call/:userId", async (ws, req) => {
       videoCallClients.push(ws);
     }
 
-      ws.on("message", async (message) => {
-     const msgDetails = JSON.parse(message);
+    ws.on("message", async (message) => {
+      const msgDetails = JSON.parse(message);
       msgDetails.room_code = hashedid;
 
       const chatinfo = await db.models.csrchatroomsModel
@@ -189,95 +206,101 @@ app.ws("/api/video-call/:userId", async (ws, req) => {
         .catch((err) => {
           console.log(err);
         });
-        if (chatinfo?.status_code == "3" || chatinfo?.status_code === null) {
-          
-          const newQueue = await db.models.csrchatqueueModel
+      if (chatinfo?.status_code == "3" || chatinfo?.status_code === null) {
+        const newQueue = await db.models.csrchatqueueModel
           .create({
             caller_id: userId,
             transaction: "VIDEO CALL",
+            category_id : msgDetails.category_id,
+            sub_category_id: msgDetails.sub_category_id
           })
           .catch((error) => {
             console.log(error);
           });
 
-          await db.models.csrchatroomsModel.update(
-            {
-              status_code: "1",
-              status_desc: "WAITING",
-              current_queue_id: newQueue.id,
-            },
-            { where: { id: chatinfo?.id } }
-          );
-  
-          // console.log('NEW QUEUE', newQueue);
-          //   console.log('WAITING QUEUE', waitingQueues.length);
-          const queueNo = await getQueueNo(newQueue.caller_id, "VIDEO CALL");
-  
-          const [results, metadata] = await db.sequelize2
-            .query(
-              `SELECT q.id, 
-                      ui.last_name as lastname, 
-                      ui.first_name as firstname,
-                      q.queue_status,
-                      q.date_onqueue,
-                      q.date_ongoing,
-                      q.date_end,
-                      csr.firstname as csr_firstname,
-                      csr.lastname as csr_lastname,
-                      q.transaction,
-                      q.caller_id
-               FROM call_queues q 
-               INNER JOIN web3.users u on (u.user_id = q.caller_id)
-               INNER JOIN web3.users_info ui ON (u.user_id = ui.user_id)
-               LEFT JOIN csr_db.users csr on (csr.id = q.csr_id)
-               WHERE q.id=${newQueue.id}`
-            )
-            .catch((err) => {
-              console.log(err);
-            });
-  
-          const sendQueue = results[0];
-          sendQueue.room_id = chatinfo?.id;
-          sendQueue.chat_name = chatinfo?.chat_name;
-          msgDetails.queue_no = queueNo;
-  
-          queClients.forEach((queClient) => {
-            if (queClient.readyState === WebSocket.OPEN) {
-              queClient.send(
-                JSON.stringify({
-                  text: JSON.stringify(sendQueue),
-                })
-              );
-            }
+        await db.models.csrchatroomsModel.update(
+          {
+            status_code: "1",
+            status_desc: "WAITING",
+            current_queue_id: newQueue.id,
+          },
+          { where: { id: chatinfo?.id } }
+        );
+
+        // console.log('NEW QUEUE', newQueue);
+        //   console.log('WAITING QUEUE', waitingQueues.length);
+        const queueNo = await getQueueNo(newQueue.caller_id, "VIDEO CALL");
+
+        const [results, metadata] = await db.sequelize2
+          .query(
+            `SELECT q.id, 
+              q.category_id,
+              q.sub_category_id,
+              main_cat.category as category,
+              sub_cat.category as sub_category,
+              ui.last_name as lastname, 
+              ui.first_name as firstname,
+              q.queue_status,
+              q.date_onqueue,
+              q.date_ongoing,
+              q.date_end,
+              csr.firstname as csr_firstname,
+              csr.lastname as csr_lastname,
+              q.transaction,
+              q.caller_id
+       FROM call_queues q 
+       INNER JOIN web3.users u on (u.user_id = q.caller_id)
+       INNER JOIN web3.users_info ui ON (u.user_id = ui.user_id)
+       LEFT JOIN csr_db.users csr on (csr.id = q.csr_id)
+       LEFT JOIN categories main_cat on (main_cat.id = q.category_id)
+       LEFT JOIN sub_categories sub_cat on (q.sub_category_id = sub_cat.id) 
+       WHERE q.id=${newQueue.id}`
+          )
+          .catch((err) => {
+            console.log(err);
           });
-          chatinfo.current_queue_id = sendQueue.id;
-  
-        }
 
-        if (chatinfo?.status_code == "1") {
-          const queueNo = await getQueueNo(userId, "VIDEO CALL");
-          msgDetails.queue_no = queueNo;
-        }
+        const sendQueue = results[0];
+        sendQueue.room_id = chatinfo?.id;
+        sendQueue.chat_name = chatinfo?.chat_name;
+        msgDetails.queue_no = queueNo;
 
-        videoCallClients.forEach((client) => {
-          if (client.readyState === WebSocket.OPEN) {
-            client.send(
+        queClients.forEach((queClient) => {
+          if (queClient.readyState === WebSocket.OPEN) {
+            queClient.send(
               JSON.stringify({
-                text: JSON.stringify(msgDetails),
-                sender: msgDetails.sender,
+                text: JSON.stringify(sendQueue),
               })
             );
           }
         });
+        chatinfo.current_queue_id = sendQueue.id;
+      }
 
-      });
+      if (chatinfo?.status_code == "1") {
+        const queueNo = await getQueueNo(userId, "VIDEO CALL");
+        msgDetails.queue_no = queueNo;
+        msgDetails.queue_id = chatinfo?.current_queue_id;
+      }
 
-      ws.on("close", () => {
-        const index = videoCallClients.indexOf(ws);
-        if (index !== -1) {
-          videoCallClients.splice(index, 1);
+      videoCallClients.forEach((client) => {
+        if (client.readyState === WebSocket.OPEN) {
+          client.send(
+            JSON.stringify({
+              text: JSON.stringify(msgDetails),
+              sender: msgDetails.sender,
+            })
+          );
         }
       });
+    });
+
+    ws.on("close", () => {
+      const index = videoCallClients.indexOf(ws);
+      if (index !== -1) {
+        videoCallClients.splice(index, 1);
+      }
+    });
   } catch (err) {
     console.log(err);
   }
@@ -327,11 +350,11 @@ app.ws("/api/chat/:roomId/:userId", async (ws, req) => {
       msgDetails.room_code = hashedid;
 
       // console.log("status code", chatinfo?.status_code);
-      if (chatinfo?.status_code == "3" || chatinfo?.status_code === null) {
+      if (chatinfo?.status_code == "3" || chatinfo?.status_code === null || chatinfo?.status_code === "5") {
         const newQueue = await db.models.csrchatqueueModel
           .create({
-            category_id : msgDetails.category_id,
-            sub_category_id : msgDetails.sub_category_id,
+            category_id: msgDetails.category_id,
+            sub_category_id: msgDetails.sub_category_id,
             caller_id: userId,
             transaction: "CHAT",
           })
@@ -386,7 +409,7 @@ app.ws("/api/chat/:roomId/:userId", async (ws, req) => {
         sendQueue.room_id = roomId;
         sendQueue.chat_name = chatinfo?.chat_name;
         msgDetails.queue_no = queueNo;
-
+        msgDetails.queue_id = newQueue.id;
         queClients.forEach((queClient) => {
           if (queClient.readyState === WebSocket.OPEN) {
             queClient.send(
@@ -402,11 +425,11 @@ app.ws("/api/chat/:roomId/:userId", async (ws, req) => {
       if (chatinfo?.status_code == "1") {
         const queueNo = await getQueueNo(userId, "CHAT");
         msgDetails.queue_no = queueNo;
+        msgDetails.queue_id = chatinfo?.current_queue_id;
       }
 
       /*SAVE MESSAGE TO DB*/
 
-   
       const chatMessage = await db.models.csrchatmessagesModel
         .create({
           chat_room_id: roomId,
@@ -419,14 +442,16 @@ app.ws("/api/chat/:roomId/:userId", async (ws, req) => {
         .catch((error) => {
           console.log(error);
         });
-      await db.models.csrchatroomsModel.update(
-        {
-          last_message: msgDetails.message,
-        },
-        { where: { id: roomId } }
-      ).catch((error) => {
-        console.log(error);
-      });
+      await db.models.csrchatroomsModel
+        .update(
+          {
+            last_message: msgDetails.message,
+          },
+          { where: { id: roomId } }
+        )
+        .catch((error) => {
+          console.log(error);
+        });
 
       roomClients.forEach((client) => {
         if (client.readyState === WebSocket.OPEN) {

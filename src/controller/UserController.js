@@ -48,6 +48,7 @@ const BookController = {
 			const user = await db.models.userModel.findOne({ where: { email }});
 			
 			if(!user) throw {code: 404, message: "User not found!"};
+			
 			const deact = await db.models.deactivatedaccountsModel.findOne({ where: { user_id: user.user_id }});
 			if(deact) {
 				if(deact?.status)  throw {code: 400, message: deact?.reason};
